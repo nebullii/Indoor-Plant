@@ -88,29 +88,39 @@ WSGI_APPLICATION = "indoor_plant.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-# Database settings
-if os.environ.get('PYTHONANYWHERE_DOMAIN'):
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    import dj_database_url
+
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+        )
+    }
+elif os.environ.get("PYTHONANYWHERE_DOMAIN"):
     # PythonAnywhere database settings
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'nevus$default',
-            'USER': 'nevus',
-            'PASSWORD': 'pythonAnywhere',
-            'HOST': 'nevus.mysql.pythonanywhere-services.com',
-            'PORT': '3306',
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "nevus$default",
+            "USER": "nevus",
+            "PASSWORD": "pythonAnywhere",
+            "HOST": "nevus.mysql.pythonanywhere-services.com",
+            "PORT": "3306",
         }
     }
 else:
     # Local database settings
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'indoor_plant',
-            'USER': 'root',
-            'PASSWORD': '',
-            'HOST': 'localhost',
-            'PORT': '3306',
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "indoor_plant",
+            "USER": "root",
+            "PASSWORD": "",
+            "HOST": "localhost",
+            "PORT": "3306",
         }
     }
 
