@@ -2,7 +2,7 @@
 
 A Django-based e-commerce platform for buying and selling indoor plants. This project is designed to help plant enthusiasts and small businesses easily manage and explore a curated collection of indoor plants—with a clean interface and seamless payment integration via Stripe.
 
-**Live Demo:** [indoorplant.store](https://nevus.pythonanywhere.com/)
+**Live Demo:** [indoorplant.store](https://indoor-plant-wg6fd2fkaa-uc.a.run.app)
 
 ---
 
