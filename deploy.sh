@@ -343,7 +343,7 @@ DJANGO_SUPERUSER_PASSWORD=DJANGO_SUPERUSER_PASSWORD:latest" \
     gcloud run services update "${SERVICE_NAME}" \
         --region="${REGION}" \
         --project="${PROJECT_ID}" \
-        --update-env-vars="ALLOWED_HOSTS=${service_host}" \
+        --update-env-vars="ALLOWED_HOSTS=${service_host},CSRF_TRUSTED_ORIGINS=https://${service_host}" \
         --quiet
     log "Updated ALLOWED_HOSTS with: ${service_host}"
 }

@@ -149,6 +149,13 @@ LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
 
+# CSRF trusted origins (comma-separated, include scheme)
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
 USE_I18N = True
 
 USE_TZ = True
