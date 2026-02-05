@@ -1,0 +1,8 @@
+# Cloud Build trigger for Indoor-Plant
+# Fill in substitutions or update via trigger UI
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args: ['-c', './deploy.sh --update']
+options:
+  logging: CLOUD_LOGGING_ONLY

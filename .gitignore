@@ -49,5 +49,24 @@ staticfiles/
 # macOS
 .DS_Store
 
+# Render CLI
+render
+render-cli.zip
+
+# AWS Elastic Beanstalk (legacy)
+.ebextensions/
+.elasticbeanstalk/
+
 # Poetry
 poetry.lock
+
+# MCP configuration
+.mcp.json
+
+# Claude Code
+.claude/
+# GCP details
+GCP_DETAILS.md
+
+# GCP details
+GCP_DETAILS.md
