@@ -1,6 +1,7 @@
 # accounts/forms.py
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import CustomUser
+from django import forms
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
@@ -49,3 +50,16 @@ class CustomUserChangeForm(UserChangeForm):
             'id': 'role',  # Custom id
             'name': 'role'  # Custom name
         })
+
+class SellerProfileForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['business_name', 'username', 'email', 'phone', 'address', 'store_banner']
+        widgets = {
+            'business_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'store_banner': forms.FileInput(attrs={'class': 'form-control-file'}),
+        }

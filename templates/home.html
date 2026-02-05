@@ -8,63 +8,50 @@
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="hero-section">
-    <div class="hero-content">
-        <h3 class="hero-title">Your one-stop shop for beautiful plants!</h3>
-        
-        <!-- Plant Care Tips Box -->
-        <div class="care-tips-box">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="tip-card">
-                        <i class="fas fa-sun"></i>
-                        <h3>Light & Care</h3>
-                        <p>Most indoor plants thrive in bright, indirect sunlight</p>
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h3 class="hero-title">Your one-stop shop for beautiful plants!</h3>
+            
+            <!-- Plant Care Tips Box -->
+            <div class="care-tips-box">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="tip-card">
+                            <i class="fas fa-sun"></i>
+                            <h3>Light & Care</h3>
+                            <p>Most indoor plants thrive in bright, indirect sunlight</p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="tip-card">
-                        <i class="fas fa-tint"></i>
-                        <h3>Watering</h3>
-                        <p>Water thoroughly when top soil feels dry</p>
+                    <div class="col-md-4">
+                        <div class="tip-card">
+                            <i class="fas fa-tint"></i>
+                            <h3>Watering</h3>
+                            <p>Water thoroughly when top soil feels dry</p>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="tip-card">
-                        <i class="fas fa-leaf"></i>
-                        <h3>Maintenance</h3>
-                        <p>Regular pruning promotes healthy growth</p>
+                    <div class="col-md-4">
+                        <div class="tip-card">
+                            <i class="fas fa-leaf"></i>
+                            <h3>Maintenance</h3>
+                            <p>Regular pruning promotes healthy growth</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="hero-buttons">
-            <a href="{% url 'product_gallery' %}" class="btn btn-success btn-lg">Shop Now</a>
-            <a href="https://www.houseplantjournal.com" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-lg ms-3">Plant Care Guide</a>
+            
+            <div class="hero-buttons">
+                <a href="{% url 'products:product_gallery' %}" class="btn btn-success btn-lg">Shop Now</a>
+                <a href="https://www.houseplantjournal.com" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-lg ms-3">Plant Care Guide</a>
+            </div>
         </div>
     </div>
+
+    <!-- Include Featured Products Component -->
+    {% include 'products/featured_products.html' %}
+
+    <!-- Include Hot Selling Products Component -->
+    {% include 'products/hot_selling_products.html' %}
 </div>
-
-<!-- Include Featured Products Component -->
-{% include 'products/featured_products.html' %}
-
-<!-- Include Hot Selling Products Component -->
-{% include 'products/hot_selling_products.html' %}
-
-<style>
-    .icon-container {
-        transition: transform 0.3s ease;
-    }
-    .icon-container:hover {
-        transform: scale(1.1);
-    }
-    .card {
-        transition: transform 0.3s ease;
-    }
-    .card:hover {
-        transform: translateY(-5px);
-    }
-</style>
 {% endblock %}

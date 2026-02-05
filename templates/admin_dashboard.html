@@ -3,7 +3,7 @@
 {% block title %}Admin Dashboard - Indoor Plant Store{% endblock %}
 
 {% block content %}
-<h1 class="mb-4"><a href="{% url 'admin_dashboard' %}" class="btn btn-primary">Admin Dashboard</a></h1>
+<h1 class="mb-4"><a href="{% url 'admin_dashboard:dashboard' %}" class="btn btn-primary">Admin Dashboard</a></h1>
 <div class="row">
     <div class="col-md-4 mb-4">
         <div class="card">
@@ -20,8 +20,8 @@
             <div class="card-body">
                 <h5 class="card-title">Product Management</h5>
                 <p class="card-text">Oversee all product listings.</p>
-                <a href="{% url 'products:product_list' %}" class="btn btn-primary mb-2">View All Products</a>
-                <a href="{% url 'products:create_product' %}" class="btn btn-success">Add New Product</a>
+                <a href="{% url 'admin_dashboard:all_products' %}" class="btn btn-primary mb-2">View All Products</a>
+                <a href="{% url 'products:add_product' %}" class="btn btn-success">Add New Product</a>
             </div>
         </div>
     </div>
@@ -30,8 +30,8 @@
             <div class="card-body">
                 <h5 class="card-title">Site Settings</h5>
                 <p class="card-text">Configure global site settings.</p>
-                <a href="{% url 'general_settings' %}" class="btn btn-primary mb-2">General Settings</a>
-                <a href="{% url 'payment_settings' %}" class="btn btn-info">Payment Settings</a>
+                <a href="#" class="btn btn-primary mb-2 disabled">General Settings (Coming Soon)</a>
+                <a href="#" class="btn btn-info disabled">Payment Settings (Coming Soon)</a>
             </div>
         </div>
     </div>

@@ -1,6 +1,6 @@
-{% extends 'base.html' %}
+{% extends 'admin_dashboard/base_admin.html' %}
 
-{% block content %}
+{% block seller_content %}
 <div class="reports-container">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -24,7 +24,7 @@
         </div>
         <div class="col-md-3">
             <div class="card">
-                <div class="card-body">
+                <div class="card-body">     
                     <h5>Featured Products</h5>
                     <h3>{{ featured_products }}</h3>
                 </div>

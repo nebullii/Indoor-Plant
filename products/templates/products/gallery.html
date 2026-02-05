@@ -1,17 +1,21 @@
 {% extends "base.html" %}
 {% load static %}
+{% load quill_filters %}
 
 {% block title %}Product Gallery{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product.css' %}">
+{% endblock %}
+
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/custom.css' %}">
 <div class="container mt-5">
     <h2 class="text-center font-weight-bold mb-4">Our Collection</h2>
     <div class="row">
         {% for product in products %}
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
             <div class="card shadow-sm border-0 h-100">
-                <a href="{% url 'products:product_detail' product.id %}">
+                <a href="{% url 'products:product_detail' product.slug %}">
                     <img src="{{ product.image.url }}" 
                          class="card-img-top" 
                          alt="{{ product.name }}" 
@@ -20,17 +24,17 @@
                 <div class="card-body text-center">
                     <h5 class="card-title font-weight-bold">{{ product.name }}</h5>
                     <p class="card-text text-muted small">
-                        {{ product.description|truncatewords:10 }}
+                        {{ product.description|quill_to_text|truncatewords:10 }}
                     </p>
                     <p class="text-success font-weight-bold">
                         ${{ product.price|floatformat:2 }}
                     </p>
                 </div>
                 <div class="card-footer bg-white border-0 text-center">
-                    <a href="{% url 'products:product_detail' product.id %}" 
+                    <a href="{% url 'products:product_detail' product.slug %}" 
                        class="btn btn-outline-success btn-sm mr-2" 
                        aria-label="View details of {{ product.name }}">
-                        View Details
+                        View
                     </a>
                     <form action="{% url 'cart:add_to_cart' product.id %}" 
                           method="POST" 
@@ -41,7 +45,7 @@
                         <button type="submit" 
                                 class="btn btn-success btn-sm add-to-cart-button" 
                                 aria-label="Add {{ product.name }} to cart">
-                            Add to Cart
+                            + Cart
                         </button>
                     </form>
                 </div>

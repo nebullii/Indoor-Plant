@@ -47,6 +47,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('5.00'))
+    tracking_number = models.CharField(max_length=64, blank=True, null=True)
 
     @property
     def subtotal(self):

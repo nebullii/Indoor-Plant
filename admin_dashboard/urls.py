@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = 'admin_dashboard'
@@ -11,4 +11,5 @@ urlpatterns = [
     path('products/', views.all_products, name='all_products'),  # New URL for all products
     # Remove the analytics URL if it exists
     # path('analytics/', views.sales_analytics, name='sales_analytics'),
+    path('ckeditor/', include('ckeditor_uploader.urls')),
 ]

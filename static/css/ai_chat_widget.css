@@ -1,0 +1,96 @@
+/* --- AI Chat Widget Styles (Consistent with Main Theme) --- */
+#ai-chat-widget {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 9999;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+#ai-chat-widget .ai-chat-btn {
+  background: #228B22;
+  color: #fff;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: 600;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#ai-chat-widget .ai-chat-btn:hover {
+  background: #1B6B1B;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+}
+#ai-chat-widget #chat-box {
+  display: none;
+  width: 420px;
+  height: 280px;
+  background: #fff;
+  border: 1.5px solid #228B22;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-top: 12px;
+  animation: fadeIn 0.3s;
+  display: flex;
+  flex-direction: column;
+  transition: height 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+#ai-chat-widget #chat-box.expanded {
+  height: 520px;
+}
+#ai-chat-widget #chat-box textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 1.1em;
+  resize: none;
+  margin-bottom: 10px;
+  transition: border 0.2s;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+#ai-chat-widget #chat-box textarea:focus {
+  border: 1.5px solid #228B22;
+  outline: none;
+}
+#ai-chat-widget #chat-box button {
+  background: #228B22;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 18px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+#ai-chat-widget #chat-box button:hover {
+  background: #1B6B1B;
+  transform: translateY(-2px);
+}
+#ai-chat-widget #bot_response_widget {
+  margin-top: 12px;
+  min-height: 30px;
+  color: #111;
+  font-size: 1.08em;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px 6px;
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+} 

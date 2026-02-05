@@ -19,7 +19,7 @@
                 <td>{{ product.name }}</td>
                 <td>${{ product.price }}</td>
                 <td>
-                    <a href="{% url 'products:product_detail' product.id %}" class="btn btn-info">View</a>
+                    <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-info">View</a>
                 </td>
             </tr>
             {% empty %}

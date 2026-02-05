@@ -1,0 +1,36 @@
+{% load static %}
+
+<div class="sidebar bg-light border-right vh-100 p-3">
+    <h4 class="mb-4">Seller Panel</h4>
+    <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+            <a class="nav-link {% if request.resolver_match.url_name == 'seller_dashboard' %}active{% endif %}" href="{% url 'accounts:seller_dashboard' %}">
+                <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link" href="{% url 'products:seller_products' %}">
+                <i class="fas fa-store mr-2"></i> Products
+            </a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link" href="{% url 'orders:seller_order_list' %}">
+                <i class="fas fa-box mr-2"></i> Orders
+            </a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link" href="/explorer/">
+                <i class="fas fa-chart-bar mr-2"></i> Reports
+            </a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link" href="{% url 'accounts:seller_storefront' request.user.slug %}">
+                <i class="fas fa-external-link-alt mr-2"></i> Storefront    
+            </a>
+        </li>
+    </ul>
+    <hr class="my-3">
+    <a class="nav-link" href="{% url 'accounts:profile' %}">
+        <i class="fas fa-user mr-2"></i> Profile
+    </a>
+</div>

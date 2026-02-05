@@ -26,12 +26,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-b+a8ww6yovgjwwsvq4&lihc=&ch3^mimfq22cxrix_&wx=2dn2"
+SECRET_KEY = os.getenv("SECRET_KEY")
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
+
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['nevus.pythonanywhere.com', 'localhost', '127.0.0.1', '*']
+# SECURE: No wildcard allowed hosts
+ALLOWED_HOSTS = [
+    'nevus.pythonanywhere.com',
+    'localhost', 
+    '127.0.0.1',
+    '0.0.0.0',  # For Docker containers
+    'indoor-plant.onrender.com',
+    'https://indoor-plant.onrender.com',
+]
+
+# Add additional allowed hosts from environment
+ADDITIONAL_ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+if ADDITIONAL_ALLOWED_HOSTS and ADDITIONAL_ALLOWED_HOSTS[0]:
+    ALLOWED_HOSTS.extend([host.strip() for host in ADDITIONAL_ALLOWED_HOSTS if host.strip()])
 
 
 # Application definition
@@ -43,6 +64,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",  # Required for flatpages
+    "django.contrib.flatpages",  # Required for flatpages
     "accounts",  # Simplified app inclusion
     "indoor_plant",
     'widget_tweaks',
@@ -52,17 +75,26 @@ INSTALLED_APPS = [
     'payments',
     'django_countries',
     'admin_dashboard',
+    'explorer',
+    'ai',    
+    'analytics',
+    'ckeditor',
+    'django_quill',
+    'inventory',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this line
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'analytics.middleware.LogSiteVisitMiddleware',
+    'analytics.middleware.LogPageViewMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',  # Add this line
 ]
 
 ROOT_URLCONF = "indoor_plant.urls"
@@ -78,6 +110,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                'products.context_processors.categories',
             ],
         },
     },
@@ -88,41 +121,41 @@ WSGI_APPLICATION = "indoor_plant.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+# Database settings - SECURE: Using environment variables
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
-    import dj_database_url
-
     DATABASES = {
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
         )
     }
-elif os.environ.get("PYTHONANYWHERE_DOMAIN"):
-    # PythonAnywhere database settings
+elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": "nevus$default",
-            "USER": "nevus",
-            "PASSWORD": "pythonAnywhere",
-            "HOST": "nevus.mysql.pythonanywhere-services.com",
-            "PORT": "3306",
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'nevus$default'),
+            'USER': os.getenv('DB_USER', 'nevus'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST', 'nevus.mysql.pythonanywhere-services.com'),
+            'PORT': os.getenv('DB_PORT', '3306'),
         }
     }
 else:
-    # Local database settings
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": "indoor_plant",
-            "USER": "root",
-            "PASSWORD": "",
-            "HOST": "localhost",
-            "PORT": "3306",
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'indoor_plant'),
+            'USER': os.getenv('DB_USER', 'root'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '3306'),
         }
     }
+
+if os.environ.get('PYTHONANYWHERE_DOMAIN') and not os.getenv('DB_PASSWORD'):
+    raise ImproperlyConfigured('DB_PASSWORD environment variable must be set for production')
 
 
 # Password validation
@@ -194,20 +227,73 @@ LOGOUT_REDIRECT_URL = 'home'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
-#Stripe Publishable key and Secret key 
+# Security settings - Environment-based configuration
+USE_HTTPS = os.getenv('USE_HTTPS', 'False').lower() == 'true'
 
-STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLIC_KEY','pk_test_51QMy07GUxl6r0dvOeQveEr8x1j8rJ3Oqc7xXg6ZccyXjZ2qENsYwgivBMcApSNmBWIISta49qn5zSnnQA4EnWND1005CJcPMH0')
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'sk_test_51QMy07GUxl6r0dvOB0VSqJaoNaMQHr1NPqeD3Ow04dLAHOSzLPF3xVtIJbrPiTvRG4mmz6syiAvmsTB18kgXTU1X00jbncuGiQ')
-
-# Security settings
-SECURE_SSL_REDIRECT = False  # Disable SSL redirect for free tier
-SESSION_COOKIE_SECURE = False  # Disable secure cookies for free tier
-CSRF_COOKIE_SECURE = False  # Disable secure CSRF cookies for free tier
+# SSL/HTTPS Security (enabled for production)
+SECURE_SSL_REDIRECT = USE_HTTPS
+SESSION_COOKIE_SECURE = USE_HTTPS
+CSRF_COOKIE_SECURE = USE_HTTPS
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+
+# Additional security headers for HTTPS
+if USE_HTTPS:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Session security
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# CSRF security
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 if not STRIPE_PUBLISHABLE_KEY or not STRIPE_SECRET_KEY:
     raise ImproperlyConfigured('Stripe API keys are not set in environment variables')
 
 SHIPPING_COST = 5.00
+
+# Add SITE_ID setting
+SITE_ID = 1
+
+EXPLORER_PERMISSION_VIEW = lambda request: (
+    request.user.is_authenticated and (
+        getattr(request.user, 'role', None) == 'SELLER' or
+        request.user.is_staff or
+        request.user.is_superuser
+    )
+)
+
+CKEDITOR_UPLOAD_PATH = "uploads/"
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 300,
+        'width': '100%',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat', 'Source']
+        ],
+        'extraPlugins': ','.join([
+            'codesnippet',  # if you want code blocks
+        ]),
+        'removePlugins': 'stylesheetparser',
+        'allowedContent': True,
+    }
+}
+
+FEDEX_API_KEY = os.getenv('FEDEX_API_KEY')
+FEDEX_API_SECRET = os.getenv('FEDEX_API_SECRET')
+FEDEX_ACCOUNT_NUMBER = os.getenv('FEDEX_ACCOUNT_NUMBER')
+FEDEX_AUTH_URL = "https://apis-sandbox.fedex.com/oauth/token"
+FEDEX_SHIPMENT_URL = "https://apis-sandbox.fedex.com/ship/v1/shipments" 

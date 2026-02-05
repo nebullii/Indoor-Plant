@@ -9,5 +9,6 @@ urlpatterns = [
     path('buyer-dashboard/', views.buyer_dashboard, name='buyer_dashboard'),
     path('seller-dashboard/', views.seller_dashboard, name='seller_dashboard'),
     path('cart/', views.cart_view, name='cart'),
-    path('logout/', LogoutView.as_view(next_page='home'), name='logout')
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
+    path('seller/<slug:seller_slug>/', views.seller_storefront, name='seller_storefront'),
 ]

@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends 'seller_dashboard/base_seller.html' %}
 {% load static %}
+{% load quill_filters %}
 
 {% block title %}{{ product.name }} - Indoor Plant Store{% endblock %}
 
@@ -22,22 +23,34 @@
             <h1 class="product-title">{{ product.name }}</h1>
             <div class="product-meta">
                 {% if product.seller %}
-                <p class="mb-2">Seller: {{ product.seller.username }}</p>
+                <p class="mb-2">
+                    Seller: 
+                    <a href="{% url 'accounts:seller_storefront' product.seller.slug %}">
+                        {{ product.seller.store_name|default:product.seller.username }}
+                    </a>
+                </p>
                 {% endif %}
                 <p class="mb-2">SKU: ERTH{{ product.id|stringformat:"02d" }}</p>
             </div>
             
             <div class="pricing-section">
                 <h2 class="price-tag">${{ product.price|floatformat:2 }}</h2>
-                <span class="badge badge-success">In Stock</span>
+                {% if product.stock > 0 %}
+                    <span class="badge badge-success">In Stock</span>
+                {% else %}
+                    <span class="badge badge-warning">Out of Stock</span>
+                {% endif %}
                 <p class="shipping-info">
                     <i class="fas fa-truck"></i> Standard Delivery Time: 5 business days
                 </p>
             </div>
 
             <div class="description-section">
-                <h4>Overview</h4>
-                <p>{{ product.description }}</p>
+                <h4>Description</h4>
+                <p class="card-text">{{ product.description|quill_to_html }}</p>
+                {% if product.tags.all %}
+                    <p class="mb-2"><strong>Tags:</strong> {{ product.tags.all|join:", " }}</p>
+                {% endif %}
             </div>
 
             <div class="purchase-section">
@@ -48,7 +61,9 @@
                         <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control">
                         <button type="button" onclick="incrementQuantity()">+</button>
                     </div>
-                    <button type="submit" class="btn add-to-cart">Add to Cart</button>
+                    <button class="btn btn-success add-to-cart-btn" data-product-id="{{ product.id }}">
+                        Add to Cart
+                    </button>
                 </form>
                 <a href="{% url 'payments:checkout' %}" class="btn checkout-button">Checkout with Stripe</a>
             </div>
@@ -81,5 +96,30 @@
             quantityInput.value = currentValue - 1;
         }
     }
+
+    document.querySelectorAll('.add-to-cart-btn').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productId = this.getAttribute('data-product-id');
+            fetch(`/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    // Optionally update cart count in the DOM
+                    document.getElementById('cart-count').textContent = data.cart_count;
+                } else {
+                    showToast(data.message || 'Failed to add to cart.', 'error');
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}

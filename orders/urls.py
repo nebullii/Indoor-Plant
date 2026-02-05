@@ -15,6 +15,9 @@ urlpatterns = [
     path('review/', views.order_review, name='order_review'),
     path('create/', views.create_order, name='create_order'),
     path('list/', views.order_list, name='order_list'),
-    path('<int:order_id>/', views.order_detail, name='order_detail'),  # Add this line
+    path('my/', views.customer_order_list, name='customer_order_list'),
+    path('seller/', views.seller_order_list, name='seller_order_list'),
+    path('<int:order_id>/', views.order_detail, name='order_detail'),
     path('proceed-to-payment/<int:address_id>/', views.proceed_to_payment, name='proceed_to_payment'),
+    path('fedex/manifest/', views.fedex_manifest, name='fedex_manifest'),
 ]

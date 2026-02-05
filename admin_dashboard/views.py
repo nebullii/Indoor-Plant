@@ -5,15 +5,13 @@ from products.models import Product
 from django.views.generic import ListView
 from django.contrib.auth.decorators import user_passes_test
 from accounts.models import CustomUser 
+from accounts.views import is_admin_user  # Import centralized auth helper
 from django.db.models import Sum
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
-
-
-def is_admin_user(user):
-    return user.is_authenticated and (user.is_staff or user.role == 'ADMIN')
+from django.contrib.auth.decorators import login_required
 
 @user_passes_test(is_admin_user)
 def dashboard(request):
@@ -23,8 +21,8 @@ def dashboard(request):
     # Get total products count
     total_products = Product.objects.count()
 
-    # Get total sellers count
-    total_sellers = CustomUser.objects.filter(role='SELLER').count()
+    # Get total sellers count using centralized manager methods
+    total_sellers = CustomUser.objects.sellers_count()
 
     # Fetch the latest 5 orders
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:3]
@@ -51,25 +49,21 @@ def dashboard(request):
     }
     return render(request, 'admin_dashboard/dashboard.html', context)
 
-@user_passes_test(is_admin_user)
+@login_required
 def order_detail(request, order_id):
-    # Get the order with all related data
-    order = get_object_or_404(
-        Order.objects.select_related('user', 'shipping_address')
-                    .prefetch_related('orderitem_set__product'),
-        id=order_id
-    )
-    
-    context = {
-        'order': order,
-        'items': order.orderitem_set.all(),
-    }
-    return render(request, 'orders/details.html', context)
+    # For regular users, show only their own orders
+    if request.user.is_staff:
+        order = get_object_or_404(Order, id=order_id)
+    else:
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'orders/order_detail.html', {'order': order})
 
 @user_passes_test(is_admin_user)
 def order_list(request):
-    # Get the latest 5 orders with related user and order items for efficient querying
-    orders = Order.objects.select_related('user').prefetch_related('orderitem_set').order_by('-created_at')[:5]
+    if request.user.is_superuser:
+        orders = Order.objects.all().order_by('-created_at')
+    else:
+        orders = Order.objects.filter(user=request.user).order_by('-created_at')
     
     # Prepare orders with their totals
     orders_with_totals = []
@@ -89,7 +83,7 @@ def order_list(request):
 
 @user_passes_test(is_admin_user)
 def sellers_list(request):
-    sellers = CustomUser.objects.filter(role='SELLER')  # Fetch all sellers
+    sellers = CustomUser.objects.get_sellers()  # Fetch all sellers using centralized method
     context = {
         'sellers': sellers,
     }
@@ -118,9 +112,9 @@ def deactivate_seller(request, seller_id):
 
 @user_passes_test(is_admin_user)
 def seller_statistics(request):
-    total_sellers = CustomUser.objects.filter(role='SELLER').count()
-    verified_sellers = CustomUser.objects.filter(role='SELLER', is_verified=True).count()
-    inactive_sellers = CustomUser.objects.filter(role='SELLER', is_active=False).count()
+    total_sellers = CustomUser.objects.sellers_count()
+    verified_sellers = CustomUser.objects.verified_sellers_count()
+    inactive_sellers = CustomUser.objects.get_inactive_sellers().count()
 
     context = {
         'total_sellers': total_sellers,

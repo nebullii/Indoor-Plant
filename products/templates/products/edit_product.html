@@ -1,51 +1,204 @@
-{% extends 'base.html' %}
+{% extends "seller_dashboard/base_seller.html" %}
+{% load static %}
 {% load widget_tweaks %}
+
+{% block title %}Edit Product: {{ product.name }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="mb-0">Edit Product: {{ product.name }}</h2>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    <h2 class="mb-4">Edit Product: {{ product.name }}</h2>
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}">Name</label>
+                    {{ form.name|add_class:"form-control" }}
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {% if field.field.widget.input_type == 'file' %}
-                                {% if product.image %}
-                                    <div class="mb-2">
-                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail" style="max-width: 200px;">
-                                        <p class="text-muted">Current image</p>
-                                    </div>
-                                {% endif %}
-                                {{ field|add_class:"form-control" }}
-                            {% else %}
-                                {{ field|add_class:"form-control" }}
-                            {% endif %}
-                            {% if field.help_text %}
-                                <small class="form-text text-muted">{{ field.help_text }}</small>
-                            {% endif %}
-                            {% if field.errors %}
-                                {% for error in field.errors %}
-                                    <div class="invalid-feedback d-block">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}">Description</label>
+                    <div id="quill-editor" style="height: 200px;"></div>
+                    {{ form.description|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.slug.id_for_label }}">Slug</label>
+                    {{ form.slug|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.meta_title.id_for_label }}">Meta Title</label>
+                    {{ form.meta_title|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.meta_description.id_for_label }}">Meta Description</label>
+                    {{ form.meta_description|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.tags.id_for_label }}">Tags</label>
+                    {{ form.tags|add_class:"form-control" }}
+                    <div id="selected-tags" class="mt-3">
+                        {% for tag in form.instance.tags.all %}
+                            <span class="badge bg-success fs-6 fw-semibold me-2 mb-2" style="padding:0.6em 1em;">{{ tag.name }}</span>
                         {% endfor %}
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Update Product</button>
-                            <a href="{% url 'products:seller_products' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="{{ form.image.id_for_label }}">Image</label>
+                    {{ form.image|add_class:"form-control-file" }}
+                    {% if product and product.image %}
+                        <div class="mt-2">
+                            <img src="{{ product.image.url }}" alt="Current Image" class="img-thumbnail w-100" style="max-width: 300px;">
                         </div>
-                    </form>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label>Barcode</label>
+                    {% if product.inventory_item.barcode_image %}
+                        <div class="mb-2">
+                            <img src="{{ product.inventory_item.barcode_image.url }}" alt="Barcode for {{ product.name }}" class="img-thumbnail w-100" style="max-width: 300px;">
+                        </div>
+                    {% endif %}
+                    <div><strong>Barcode Value:</strong> {{ product.inventory_item.barcode_value }}</div>
+                    <div><strong>Label:</strong> {{ product.inventory_item.label_text }}</div>
+                    <a href="{% url 'products:print_label' product.id %}" class="btn btn-outline-success mt-2" target="_blank">Print Label</a>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.price.id_for_label }}">Price</label>
+                        {{ form.price|add_class:"form-control" }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.cost_price.id_for_label }}">Cost Price</label>
+                        {{ form.cost_price|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.stock.id_for_label }}">Stock</label>
+                    {{ form.stock|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.category.id_for_label }}">Category</label>
+                    {% if form.category.field.queryset.count == 0 %}
+                        <select class="form-control" disabled>
+                            <option>No categories available</option>
+                        </select>
+                    {% else %}
+                        {{ form.category|add_class:"form-control" }}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.status.id_for_label }}">Status</label>
+                    {{ form.status|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    <div class="form-check mb-2">
+                        {{ form.featured|add_class:"form-check-input" }}
+                        <label class="form-check-label" for="{{ form.featured.id_for_label }}">Featured</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        {{ form.hot_selling|add_class:"form-check-input" }}
+                        <label class="form-check-label" for="{{ form.hot_selling.id_for_label }}">Hot Selling</label>
+                    </div>
+                    <div class="form-check">
+                        {{ form.in_stock|add_class:"form-check-input" }}
+                        <label class="form-check-label" for="{{ form.in_stock.id_for_label }}">In Stock</label>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        <div class="mt-4 text-end">
+            <button type="submit" class="btn btn-success btn-lg">Update Product</button>
+            <a href="{% url 'products:seller_products' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+{{ form.media }}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Quill
+    var quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+    
+    // Sync Quill content with form field
+    var descriptionField = document.getElementById('{{ form.description.id_for_label }}');
+    descriptionField.style.display = 'none';
+    
+    // Set initial content if editing
+    if (descriptionField.value) {
+        try {
+            var content = JSON.parse(descriptionField.value);
+            if (content.ops && content.ops[0] && content.ops[0].insert) {
+                quill.setText(content.ops[0].insert);
+            }
+        } catch(e) {
+            quill.setText(descriptionField.value);
+        }
+    }
+    
+    // Update form field when Quill content changes
+    quill.on('text-change', function() {
+        var content = quill.getContents();
+        descriptionField.value = JSON.stringify(content);
+    });
+    
+    // Select2 for tags
+    $('#{{ form.tags.id_for_label }}').select2({
+        width: '100%',
+        placeholder: 'Select tags'
+    });
+    const tagSelect = document.getElementById('{{ form.tags.id_for_label }}');
+    const selectedTagsDiv = document.getElementById('selected-tags');
+
+    function updateSelectedTags() {
+        selectedTagsDiv.innerHTML = '';
+        Array.from(tagSelect.selectedOptions).forEach(option => {
+            const span = document.createElement('span');
+            span.className = 'badge bg-success fs-6 fw-semibold me-2 mb-2';
+            span.style.padding = '0.6em 1em';
+            span.textContent = option.text;
+            selectedTagsDiv.appendChild(span);
+        });
+    }
+
+    updateSelectedTags();
+    tagSelect.addEventListener('change', updateSelectedTags);
+});
+</script>
 {% endblock %} 

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'seller_dashboard/base_seller.html' %}
 {% load static %}
 
 {% block extra_css %}
@@ -7,7 +7,7 @@
 
 {% block title %}My Products - Indoor Plant Store{% endblock %}
 
-{% block content %}
+{% block seller_content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>My Products</h2>
@@ -15,58 +15,50 @@
             <i class="fas fa-plus"></i> Add New Product
         </a>
     </div>
-    
     {% if products %}
-    <div class="row">
-        {% for product in products %}
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <a href="{% url 'products:product_detail' product.id %}">
-                        <img src="{{ product.image.url }}" 
-                             class="card-img-top" 
-                             alt="{{ product.name }}" 
-                             style="height: 200px; object-fit: cover;"
-                             loading="lazy">
-                    </a>
-                    <div class="card-body text-center">
-                        <h5 class="card-title font-weight-bold">{{ product.name }}</h5>
-                        <p class="card-text text-muted small">
-                            {{ product.description|truncatewords:10 }}
-                        </p>
-                        <p class="text-success font-weight-bold">
-                            ${{ product.price|floatformat:2 }}
-                        </p>
-                        <div class="d-flex justify-content-center gap-2 mb-2">
-                            {% if product.featured %}
-                                <span class="badge bg-primary">Featured</span>
-                            {% endif %}
-                            {% if product.hot_selling %}
-                                <span class="badge bg-danger">Hot Selling</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 text-center">
-                        <div class="btn-group" role="group">
-                            <a href="{% url 'products:edit_product' product.id %}" 
-                               class="btn btn-outline-primary btn-sm"
-                               aria-label="Edit {{ product.name }}">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'products:product_detail' product.id %}" 
-                               class="btn btn-outline-success btn-sm"
-                               aria-label="View details of {{ product.name }}">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <button class="btn btn-outline-danger btn-sm" 
-                                    onclick="deleteProduct('{{ product.id }}')"
-                                    aria-label="Delete {{ product.name }}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>SKU</th>
+            <th>Available On</th>
+            <th>Status</th>
+            <th>Stock</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>
+              <img src="{{ product.image.url|default:'https://via.placeholder.com/40' }}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
+            </td>
+            <td>
+              <a href="{% url 'products:product_detail' product.slug %}" class="fw-bold">{{ product.name }}</a>
+            </td>
+            <td>ERTH{{ product.id|stringformat:"02d" }}</td>
+            <td>{{ product.created_at|date:"d M, y" }}</td>
+            <td>
+              {% if product.stock > 0 %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Out of Stock</span>
+              {% endif %}
+            </td>
+            <td>{{ product.stock }}</td>
+            <td>${{ product.price }}</td>
+            <td>
+              <a href="{% url 'products:edit_product' product.id %}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+              <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-sm btn-outline-success" title="View"><i class="fas fa-eye"></i></a>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('{{ product.slug }}')" title="Delete"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
     {% else %}
     <div class="col-12 text-center py-5">

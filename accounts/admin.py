@@ -9,7 +9,7 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     
     # Add 'role' to the list of fields displayed in the admin
-    list_display = ('email', 'username', 'role', 'is_staff', 'is_active',)
+    list_display = ('id', 'email', 'username', 'role', 'is_staff', 'is_active',)
     
     # Add 'role' to the fieldsets for editing users
     fieldsets = (

@@ -1,0 +1,74 @@
+<!-- templates/partials/ai_chat_widget.html -->
+<div id="ai-chat-widget">
+  <button class="ai-chat-btn" onclick="toggleChat()" title="Chat with Plant Expert">
+    <i class="fas fa-comments"></i>
+  </button>
+  <div id="chat-box" style="display: none;">
+    <div style="padding:14px 14px 10px 14px;">
+      <textarea id="user_question_widget" rows="2" placeholder="Ask about plants..." onkeydown="handleChatKey(event)"></textarea>
+      <button onclick="askBotWidget()">Ask</button>
+      <div id="bot_response_widget"></div>
+    </div>
+  </div>
+</div>
+<script>
+function toggleChat() {
+  var box = document.getElementById("chat-box");
+  if (box.style.display === "block") {
+    box.style.display = "none";
+  } else {
+    box.style.display = "block";
+    box.classList.remove("expanded"); // Reset to small size when opened
+  }
+}
+function handleChatKey(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    askBotWidget();
+  }
+}
+// Get CSRF token
+function getCsrfToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+         document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+         '';
+}
+
+async function askBotWidget() {
+  const textarea = document.getElementById("user_question_widget");
+  const question = textarea.value;
+  if (!question.trim()) {
+    document.getElementById("bot_response_widget").innerHTML = "<p style='color: #666;'>Please enter a question.</p>";
+    return;
+  }
+  
+  document.getElementById("bot_response_widget").innerHTML = "<p style='color: #28a745;'><i class='fas fa-spinner fa-spin'></i> Thinking...</p>";
+  
+  try {
+    const response = await fetch("/ai/ask/", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCsrfToken()
+      },
+      body: new URLSearchParams({ 
+        question,
+        csrfmiddlewaretoken: getCsrfToken()
+      }),
+    });
+    
+    const data = await response.json();
+    textarea.value = ""; // Clear the textarea for the next prompt
+    
+    if (data.answer) {
+      document.getElementById("bot_response_widget").innerHTML = data.answer;
+      document.getElementById("chat-box").classList.add("expanded"); // Expand on answer
+    } else {
+      document.getElementById("bot_response_widget").innerHTML = `<p style='color: #dc3545;'>${data.error || "Sorry, something went wrong. Please try again."}</p>`;
+    }
+  } catch (error) {
+    console.error('Chat error:', error);
+    document.getElementById("bot_response_widget").innerHTML = "<p style='color: #dc3545;'>Network error. Please check your connection and try again.</p>";
+  }
+}
+</script>

@@ -2,11 +2,13 @@ from django.core.paginator import Paginator
 from django.views.generic import ListView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.http import HttpResponseForbidden
 from .forms import ProductForm, SearchForm
 from .models import Product
 from orders.models import Order
 from django.views import View
+from django.utils.text import slugify
 
 def home(request):
     form = SearchForm()
@@ -28,21 +30,24 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
-def product_detail(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
+def product_detail(request, slug):
+    product = get_object_or_404(Product, slug=slug)
     return render(request, 'products/product_detail.html', {'product': product})
 
 def product_gallery(request):
+    category_slug = request.GET.get('category')
+    products = Product.objects.all()
+    if category_slug:
+        products = products.filter(category__slug=category_slug)
     form = SearchForm()
-    product_list = Product.objects.all().order_by('-created_at')
 
     if 'query' in request.GET:
         form = SearchForm(request.GET)
         if form.is_valid():
             query = form.cleaned_data['query']
-            product_list = product_list.filter(name__icontains=query)
+            products = products.filter(name__icontains=query)
 
-    paginator = Paginator(product_list, 8)
+    paginator = Paginator(products, 8)
     page_number = request.GET.get('page')
     products = paginator.get_page(page_number)
 
@@ -56,7 +61,8 @@ def add_product(request):
             product = form.save(commit=False)
             product.seller = request.user
             product.save()
-            return redirect('products:product_gallery')
+            form.save_m2m()  # For tags/categories if using ManyToMany
+            return redirect('products:seller_products')
     else:
         form = ProductForm()
     
@@ -95,11 +101,15 @@ def delete_product(request, product_id):
     product.delete()
     return redirect('products:seller_products')
 
-class BuyerDashboardView(View):
-    def get(self, request):
-        orders = Order.objects.filter(user=request.user)
-        return render(request, 'buyer_dashboard.html', {'orders': orders})
-    
+@login_required
+def print_label(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    inventory_item = getattr(product, 'inventory_item', None)
+    return render(request, 'products/print_label.html', {
+        'product': product,
+        'inventory_item': inventory_item
+    })
+
 def search_plants(request):
     form = SearchForm()
     results = []

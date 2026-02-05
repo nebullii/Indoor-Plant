@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Print Label: {{ product.name }}{% endblock %}
+{% block content %}
+<div class="container mt-5" style="max-width: 400px;">
+    <div class="card p-4 text-center">
+        <h4 class="mb-3">{{ product.name }}</h4>
+        <div class="mb-2">
+            {% if inventory_item and inventory_item.barcode_image %}
+                <img id="barcode-img" src="{{ inventory_item.barcode_image.url }}" alt="Barcode for {{ product.name }}" style="max-width: 100%; height: 80px;">
+            {% endif %}
+        </div>
+        <div><strong>Barcode Value:</strong> {{ inventory_item.barcode_value }}</div>
+        <div><strong>Label:</strong> {{ inventory_item.label_text }}</div>
+        <div><strong>SKU:</strong> {{ product.sku }}</div>
+        <button class="btn btn-success mt-3 no-print" onclick="window.print()">Print</button>
+    </div>
+</div>
+<style>
+/* Hide footer, newsletter, and chatbot icon for this page */
+footer, .newsletter, .chatbot-icon, #footer, .site-footer {
+  display: none !important;
+}
+@media print {
+  .no-print { display: none !important; }
+  footer, .newsletter, .chatbot-icon, #footer, .site-footer {
+    display: none !important;
+  }
+}
+</style>
+{% endblock %} 

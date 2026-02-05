@@ -106,6 +106,9 @@
     border: 1px solid var(--border-color);
     padding: 20px;
     margin-bottom: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .stats-card {
@@ -225,4 +228,34 @@
 .status-cancelled {
     background: #f8d7da;
     color: #721c24;
+}
+
+.icon-container {
+    transition: transform 0.3s ease;
+}
+.icon-container:hover {
+    transform: scale(1.1);
+}
+.card {
+    transition: transform 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.breadcrumb {
+    margin: 0;
+}
+
+.breadcrumb-item a {
+    color: #228B22;
+}
+
+.btn-group {
+    gap: 0.5rem;
 }

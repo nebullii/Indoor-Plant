@@ -16,6 +16,7 @@
     </div>
 
     <!-- Orders Summary Card -->
+    {% if user.is_staff %}
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <div class="d-flex align-items-center mb-3">
@@ -30,6 +31,7 @@
             </a>
         </div>
     </div>
+    {% endif %}
 
     <!-- Recent Orders -->
     <div class="card shadow-sm">

@@ -13,11 +13,20 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb bg-transparent p-0 mb-0">
                 <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'orders:order_list' %}">Orders</a></li>
+                {% if user.role == 'SELLER' %}
+                    <li class="breadcrumb-item"><a href="{% url 'orders:order_list' %}">Orders</a></li>
+                {% else %}
+                    <li class="breadcrumb-item"><a href="{% url 'orders:customer_order_list' %}">My Orders</a></li>
+                {% endif %}
                 <li class="breadcrumb-item active">Order #{{ order.id }}</li>
             </ol>
         </nav>
     </div>
+    {% if user.role == 'SELLER' %}
+    <div class="d-flex justify-content-end mb-4">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#fedexManifestModal">Generate Manifest</button>
+    </div>
+    {% endif %}
 
     <!-- Order Items Table -->
     <div class="card mb-4">
@@ -114,5 +123,102 @@
             </div>
         </div>
     </div>
+
+    <!-- Package Details Section (add FedEx Manifest button below) -->
+    <div id="package-details-section">
+        <!-- Existing package details UI here -->
+    </div>
+
+    {% if user.role == 'SELLER' %}
+        {% include 'orders/manifest_modal.html' %}
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const manifestForm = document.getElementById('fedex-manifest-form');
+    const manifestBtn = document.querySelector('button[data-toggle="modal"][data-target="#fedexManifestModal"]');
+    let labelUrl = null;
+    let trackingNumber = null;
+
+    if (manifestForm) {
+        manifestForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(manifestForm);
+            const data = {};
+            formData.forEach((value, key) => { data[key] = value; });
+            // Add order_id to the request
+            data['order_id'] = "{{ order.id }}";
+
+            fetch("{% url 'orders:fedex_manifest' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    labelUrl = result.label_url;
+                    trackingNumber = result.tracking_number;
+                    // Change button to Print Label
+                    manifestBtn.textContent = 'Print Label';
+                    manifestBtn.classList.remove('btn-primary');
+                    manifestBtn.classList.add('btn-success');
+                    // Close modal
+                    var modal = $("#fedexManifestModal");
+                    if (modal.length && typeof modal.modal === 'function') {
+                        modal.modal('hide');
+                    }
+                    // Add click event to print/download label
+                    manifestBtn.onclick = function() {
+                        window.open(labelUrl, '_blank');
+                    };
+                    // Show tracking number on the page
+                    let trackingDiv = document.getElementById('tracking-info');
+                    if (!trackingDiv) {
+                        trackingDiv = document.createElement('div');
+                        trackingDiv.id = 'tracking-info';
+                        manifestBtn.parentNode.appendChild(trackingDiv);
+                    }
+                    if (trackingNumber) {
+                        trackingDiv.innerHTML = `<strong>Tracking Number:</strong> ${trackingNumber}`;
+                    }
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        });
+    }
+
+    // Helper to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    $('#fedexManifestModal').on('show.bs.modal', function () {
+        const now = new Date();
+        const isoString = now.toISOString().slice(0, 19) + 'Z';
+        document.getElementById('pickup_time').value = isoString;
+    });
+});
+</script>
 {% endblock %}
