@@ -397,13 +397,12 @@ DATABASE_URL=DATABASE_URL:latest" \
 }
 
 create_superuser() {
-    info "Creating Django superuser..."
+    info "Creating Django admin superuser..."
 
     local connection_name
     connection_name=$(gcloud sql instances describe "${DB_INSTANCE_NAME}" \
         --project="${PROJECT_ID}" --format='value(connectionName)')
 
-    # Create superuser via Cloud Run Job
     gcloud run jobs create "${SERVICE_NAME}-createsuperuser" \
         --image="${IMAGE_URI}" \
         --region="${REGION}" \
@@ -417,7 +416,7 @@ DATABASE_URL=DATABASE_URL:latest,\
 DJANGO_SUPERUSER_PASSWORD=DJANGO_SUPERUSER_PASSWORD:latest" \
         --add-cloudsql-instances="${connection_name}" \
         --command="python" \
-        --args="manage.py,createsuperuser,--noinput" \
+        --args="manage.py,create_admin" \
         --max-retries=0 \
         --quiet 2>/dev/null || \
     gcloud run jobs update "${SERVICE_NAME}-createsuperuser" \
@@ -433,7 +432,7 @@ DATABASE_URL=DATABASE_URL:latest,\
 DJANGO_SUPERUSER_PASSWORD=DJANGO_SUPERUSER_PASSWORD:latest" \
         --add-cloudsql-instances="${connection_name}" \
         --command="python" \
-        --args="manage.py,createsuperuser,--noinput" \
+        --args="manage.py,create_admin" \
         --max-retries=0 \
         --quiet
 
@@ -441,8 +440,54 @@ DJANGO_SUPERUSER_PASSWORD=DJANGO_SUPERUSER_PASSWORD:latest" \
         --region="${REGION}" \
         --project="${PROJECT_ID}" \
         --wait \
-        --quiet 2>/dev/null || warn "Superuser may already exist (this is OK)"
-    log "Superuser setup complete"
+        --quiet 2>/dev/null || warn "Admin user may already exist (this is OK)"
+    log "Admin superuser setup complete"
+}
+
+seed_data() {
+    info "Seeding sample products..."
+
+    local connection_name
+    connection_name=$(gcloud sql instances describe "${DB_INSTANCE_NAME}" \
+        --project="${PROJECT_ID}" --format='value(connectionName)')
+
+    gcloud run jobs create "${SERVICE_NAME}-seeddata" \
+        --image="${IMAGE_URI}" \
+        --region="${REGION}" \
+        --project="${PROJECT_ID}" \
+        --set-env-vars="USE_HTTPS=True" \
+        --set-secrets="\
+SECRET_KEY=SECRET_KEY:latest,\
+STRIPE_PUBLIC_KEY=STRIPE_PUBLIC_KEY:latest,\
+STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,\
+DATABASE_URL=DATABASE_URL:latest" \
+        --add-cloudsql-instances="${connection_name}" \
+        --command="python" \
+        --args="manage.py,seed_data" \
+        --max-retries=0 \
+        --quiet 2>/dev/null || \
+    gcloud run jobs update "${SERVICE_NAME}-seeddata" \
+        --image="${IMAGE_URI}" \
+        --region="${REGION}" \
+        --project="${PROJECT_ID}" \
+        --set-env-vars="USE_HTTPS=True" \
+        --set-secrets="\
+SECRET_KEY=SECRET_KEY:latest,\
+STRIPE_PUBLIC_KEY=STRIPE_PUBLIC_KEY:latest,\
+STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,\
+DATABASE_URL=DATABASE_URL:latest" \
+        --add-cloudsql-instances="${connection_name}" \
+        --command="python" \
+        --args="manage.py,seed_data" \
+        --max-retries=0 \
+        --quiet
+
+    gcloud run jobs execute "${SERVICE_NAME}-seeddata" \
+        --region="${REGION}" \
+        --project="${PROJECT_ID}" \
+        --wait \
+        --quiet 2>/dev/null || warn "Seed data may already exist (this is OK)"
+    log "Sample products seeded"
 }
 
 # --- Print Summary ---
@@ -498,6 +543,8 @@ main() {
         --update)
             build_and_deploy
             run_migrations
+            create_superuser
+            seed_data
             print_summary
             ;;
         *)
@@ -514,6 +561,7 @@ main() {
             build_and_deploy
             run_migrations
             create_superuser
+            seed_data
             print_summary
             ;;
     esac
