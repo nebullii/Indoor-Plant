@@ -66,10 +66,7 @@ check_prerequisites() {
     fi
 
     if [ ! -f ".env" ]; then
-        error ".env file not found. Create one with required secrets."
-        echo "  Required: SECRET_KEY, STRIPE_PUBLIC_KEY, STRIPE_SECRET_KEY"
-        echo "  Optional: OPENAI_API_KEY, SENDGRID_API_KEY, FEDEX_API_KEY, etc."
-        exit 1
+        warn ".env not found. Skipping local secret sync; expecting Secret Manager to be pre-populated."
     fi
 
     log "Prerequisites OK (project: ${PROJECT_ID})"
@@ -490,9 +487,13 @@ main() {
 
     case "$mode" in
         --secrets-only)
-            sync_secrets
-            info "Secrets synced. Redeploy to pick up changes:"
-            echo "  ./deploy.sh --update"
+            if [ -f ".env" ]; then
+                sync_secrets
+                info "Secrets synced. Redeploy to pick up changes:"
+                echo "  ./deploy.sh --update"
+            else
+                warn "No .env found; secrets-only mode skipped (Secret Manager expected to be pre-populated)."
+            fi
             ;;
         --update)
             build_and_deploy
@@ -502,7 +503,11 @@ main() {
         *)
             enable_apis
             create_artifact_registry
-            sync_secrets
+            if [ -f ".env" ]; then
+                sync_secrets
+            else
+                warn "Skipping secret sync (.env not found)."
+            fi
             create_database
             create_storage_bucket
             setup_iam
