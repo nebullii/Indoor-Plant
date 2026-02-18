@@ -25,6 +25,66 @@ gcloud config set project YOUR_PROJECT_ID
 ./deploy.sh --secrets-only
 ```
 
+## GitHub Actions CI/CD (Cloud Run)
+
+This repo includes a workflow at `.github/workflows/deploy-cloud-run.yml` that builds the Docker image and deploys to Cloud Run on every push to `main`.
+
+### One-time setup (Workload Identity Federation)
+
+```bash
+PROJECT_ID="indoor-plants-486514"
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+POOL_ID="github"
+PROVIDER_ID="github"
+SA_NAME="indoor-plants-deployer"
+REPO="nebullii/Indoor-Plants"
+
+# Create service account
+gcloud iam service-accounts create "$SA_NAME" --project "$PROJECT_ID"
+
+# Create workload identity pool and provider (if not already created)
+gcloud iam workload-identity-pools create "$POOL_ID" \
+  --project="$PROJECT_ID" \
+  --location="global" \
+  --display-name="GitHub Actions"
+
+gcloud iam workload-identity-pools providers create-oidc "$PROVIDER_ID" \
+  --project="$PROJECT_ID" \
+  --location="global" \
+  --workload-identity-pool="$POOL_ID" \
+  --display-name="GitHub Actions" \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref"
+
+# Allow the GitHub repo to impersonate the service account
+gcloud iam service-accounts add-iam-policy-binding \
+  "${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --project="$PROJECT_ID" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/attribute.repository/${REPO}"
+
+# Grant minimal roles for deploy
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/run.admin"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+gcloud iam service-accounts add-iam-policy-binding \
+  "${PROJECT_ID}@appspot.gserviceaccount.com" \
+  --project="$PROJECT_ID" \
+  --role="roles/iam.serviceAccountUser" \
+  --member="serviceAccount:${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
+```
+
+### GitHub repo secrets
+
+Add these secrets in GitHub:
+- `GCP_PROJECT_ID`: `indoor-plants-486514`
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`: the full provider resource name from:
+  `gcloud iam workload-identity-pools providers describe github --location=global --workload-identity-pool=github --format="value(name)"`
+- `GCP_SERVICE_ACCOUNT`: `indoor-plants-deployer@indoor-plants-486514.iam.gserviceaccount.com`
+
 ## Architecture
 
 ```

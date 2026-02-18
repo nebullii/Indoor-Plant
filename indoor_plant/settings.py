@@ -13,6 +13,7 @@ import dj_database_url
 from pathlib import Path
 import environ
 import os
+import sys
 from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
 load_dotenv()
@@ -46,7 +47,6 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '0.0.0.0',  # For Docker containers
     'indoor-plant.onrender.com',
-    'https://indoor-plant.onrender.com',
 ]
 
 # Add additional allowed hosts from environment
@@ -222,6 +222,18 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Google Cloud Storage for media files (production)
+USE_GCS = os.getenv('USE_GCS', 'False').lower() == 'true'
+if USE_GCS:
+    GCS_BUCKET_NAME = os.getenv('GCS_BUCKET_NAME')
+    GS_BUCKET_NAME = GCS_BUCKET_NAME
+    GS_DEFAULT_ACL = 'publicRead'
+    MEDIA_URL = f'https://storage.googleapis.com/{GCS_BUCKET_NAME}/'
+    STORAGES = {
+        "default": {"BACKEND": "storages.backends.gcloud.GoogleCloudStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    }
+
 LOGOUT_REDIRECT_URL = 'home'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -255,7 +267,14 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-if not STRIPE_PUBLISHABLE_KEY or not STRIPE_SECRET_KEY:
+_SKIP_STRIPE_COMMANDS = {
+    'collectstatic', 'migrate', 'makemigrations', 'test', 'check',
+    'showmigrations', 'shell', 'create_admin', 'seed_data',
+    'fix_product_slugs', 'generate_inventory_for_existing',
+}
+_running_management_command = len(sys.argv) > 1 and sys.argv[1] in _SKIP_STRIPE_COMMANDS
+
+if not _running_management_command and (not STRIPE_PUBLISHABLE_KEY or not STRIPE_SECRET_KEY):
     raise ImproperlyConfigured('Stripe API keys are not set in environment variables')
 
 SHIPPING_COST = 5.00
