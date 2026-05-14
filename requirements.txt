@@ -7,7 +7,7 @@ botocore==1.35.58
 certifi==2024.8.30
 cffi==1.17.1
 charset-normalizer==3.4.0
-cryptography==46.0.5
+cryptography==46.0.7
 distro==1.9.0
 dj-database-url==2.3.0
 Django==5.1.15
@@ -34,7 +34,7 @@ MarkupSafe==3.0.2
 mysqlclient==2.2.4
 openai==1.93.2
 packaging==24.1
-pillow==12.1.1
+pillow==12.2.0
 posthog==6.0.1
 psycopg2-binary==2.9.10
 pycparser==2.22
@@ -43,9 +43,9 @@ pydantic_core==2.33.2
 python-barcode==0.15.1
 python-dateutil==2.9.0.post0
 python-decouple==3.6
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 python-http-client==3.3.7
-requests==2.32.4
+requests==2.33.0
 s3transfer==0.10.3
 sendgrid==6.12.4
 six==1.16.0
@@ -55,6 +55,6 @@ stripe==11.1.1
 tqdm==4.67.1
 typing-inspection==0.4.1
 typing_extensions==4.12.2
-urllib3==2.6.3
+urllib3==2.7.0
 Werkzeug==3.1.4
 whitenoise==6.7.0
